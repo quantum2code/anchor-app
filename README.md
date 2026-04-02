@@ -1,6 +1,6 @@
 # anchor
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, TanStack Router, Hono, TRPC, and more.
+This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), and has been adapted to use Supabase auth alongside React, TanStack Router, Hono, TRPC, and more.
 
 ## Features
 
@@ -13,7 +13,7 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **Node.js** - Runtime environment
 - **Drizzle** - TypeScript-first ORM
 - **PostgreSQL** - Database engine
-- **Authentication** - Better-Auth
+- **Authentication** - Supabase Auth
 
 ## Getting Started
 
@@ -28,9 +28,22 @@ pnpm install
 This project uses PostgreSQL with Drizzle ORM.
 
 1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/server/.env` file with your PostgreSQL connection details.
+2. Update your `apps/server/.env` file with your PostgreSQL connection details and Supabase project credentials.
+3. Update `apps/web/.env` with the matching Supabase public credentials.
 
-3. Apply the schema to your database:
+Required auth env vars:
+
+```bash
+# apps/server/.env
+SUPABASE_URL=...
+SUPABASE_ANON_KEY=...
+
+# apps/web/.env
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+```
+
+4. Apply the schema to your database:
 
 ```bash
 pnpm run db:push

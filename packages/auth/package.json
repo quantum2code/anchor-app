@@ -11,9 +11,8 @@
   },
   "scripts": {},
   "dependencies": {
-    "@anchor/db": "workspace:*",
     "@anchor/env": "workspace:*",
-    "better-auth": "catalog:",
+    "@supabase/supabase-js": "^2.49.8",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },

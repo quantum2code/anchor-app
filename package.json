@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "pnpm -r dev",
     "build": "pnpm -r build",
+    "test": "pnpm -r --if-present test",
     "check-types": "pnpm -r check-types",
     "dev:web": "pnpm --filter web dev",
     "dev:server": "pnpm --filter server dev",

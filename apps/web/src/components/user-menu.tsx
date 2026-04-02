@@ -11,11 +11,11 @@ import {
 import { Skeleton } from "@anchor/ui/components/skeleton";
 import { Link, useNavigate } from "@tanstack/react-router";
 
-import { authClient } from "@/lib/auth-client";
+import { getAuthClient, useAuthSession } from "@/lib/auth-client";
 
 export default function UserMenu() {
   const navigate = useNavigate();
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending } = useAuthSession();
 
   if (isPending) {
     return <Skeleton className="h-9 w-24" />;
@@ -38,22 +38,17 @@ export default function UserMenu() {
         <DropdownMenuGroup>
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
-          <DropdownMenuItem
-            variant="destructive"
-            onClick={() => {
-              authClient.signOut({
-                fetchOptions: {
-                  onSuccess: () => {
-                    navigate({
-                      to: "/",
-                    });
-                  },
-                },
-              });
-            }}
-          >
-            Sign Out
+            <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
+            <DropdownMenuItem
+              variant="destructive"
+              onClick={async () => {
+                await getAuthClient().auth.signOut();
+                navigate({
+                  to: "/",
+                });
+              }}
+            >
+              Sign Out
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
