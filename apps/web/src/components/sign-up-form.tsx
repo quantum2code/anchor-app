@@ -6,7 +6,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import z from "zod";
 
-import { authClient } from "@/lib/auth-client";
+import { getAuthClient, useAuthSession } from "@/lib/auth-client";
 
 import Loader from "./loader";
 
@@ -14,7 +14,7 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
   const navigate = useNavigate({
     from: "/",
   });
-  const { isPending } = authClient.useSession();
+  const { isPending } = useAuthSession();
 
   const form = useForm({
     defaultValues: {
@@ -23,24 +23,30 @@ export default function SignUpForm({ onSwitchToSignIn }: { onSwitchToSignIn: () 
       name: "",
     },
     onSubmit: async ({ value }) => {
-      await authClient.signUp.email(
-        {
-          email: value.email,
-          password: value.password,
-          name: value.name,
-        },
-        {
-          onSuccess: () => {
-            navigate({
-              to: "/dashboard",
-            });
-            toast.success("Sign up successful");
-          },
-          onError: (error) => {
-            toast.error(error.error.message || error.error.statusText);
+      const { data, error } = await getAuthClient().auth.signUp({
+        email: value.email,
+        password: value.password,
+        options: {
+          data: {
+            name: value.name,
           },
         },
-      );
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      if (data.session) {
+        navigate({
+          to: "/dashboard",
+        });
+        toast.success("Sign up successful");
+        return;
+      }
+
+      toast.success("Account created. Check your email to confirm your sign up.");
     },
     validators: {
       onSubmit: z.object({

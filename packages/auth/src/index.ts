@@ -1,33 +1,67 @@
-import { createDb } from "@anchor/db";
-import * as schema from "@anchor/db/schema/auth";
 import { env } from "@anchor/env/server";
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { createClient, type User } from "@supabase/supabase-js";
 
-export function createAuth() {
-  const db = createDb();
+export type AuthSession = {
+  accessToken: string;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+  };
+};
 
-  return betterAuth({
-    database: drizzleAdapter(db, {
-      provider: "pg",
+function mapUser(user: User): AuthSession["user"] {
+  const metadata = user.user_metadata as
+    | {
+        name?: string;
+        avatar_url?: string;
+        picture?: string;
+      }
+    | undefined;
 
-      schema: schema,
-    }),
-    trustedOrigins: [env.CORS_ORIGIN],
-    emailAndPassword: {
-      enabled: true,
+  return {
+    id: user.id,
+    name: metadata?.name ?? user.email?.split("@")[0] ?? "Anonymous",
+    email: user.email ?? "",
+    image: metadata?.avatar_url ?? metadata?.picture ?? null,
+  };
+}
+
+function getSupabaseConfig() {
+  if (!env.SUPABASE_URL || !env.SUPABASE_ANON_KEY) {
+    throw new Error(
+      "Missing SUPABASE_URL or SUPABASE_ANON_KEY in apps/server/.env. Supabase auth cannot be initialized.",
+    );
+  }
+
+  return {
+    url: env.SUPABASE_URL,
+    anonKey: env.SUPABASE_ANON_KEY,
+  };
+}
+
+export function createServerAuthClient() {
+  const { url, anonKey } = getSupabaseConfig();
+
+  return createClient(url, anonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
     },
-    secret: env.BETTER_AUTH_SECRET,
-    baseURL: env.BETTER_AUTH_URL,
-    advanced: {
-      defaultCookieAttributes: {
-        sameSite: "none",
-        secure: true,
-        httpOnly: true,
-      },
-    },
-    plugins: [],
   });
 }
 
-export const auth = createAuth();
+export async function getSessionFromAccessToken(accessToken: string): Promise<AuthSession | null> {
+  const authClient = createServerAuthClient();
+  const { data, error } = await authClient.auth.getUser(accessToken);
+
+  if (error || !data.user) {
+    return null;
+  }
+
+  return {
+    accessToken,
+    user: mapUser(data.user),
+  };
+}

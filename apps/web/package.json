@@ -23,7 +23,7 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "^11.13.4",
-    "better-auth": "catalog:",
+    "@supabase/supabase-js": "^2.49.8",
     "dotenv": "catalog:",
     "lucide-react": "catalog:",
     "next-themes": "catalog:",

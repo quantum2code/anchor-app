@@ -1,6 +1,6 @@
 import { createContext } from "@anchor/api/context";
-import { appRouter } from "@anchor/api/routers/index";
-import { auth } from "@anchor/auth";
+import { createDatabaseProjectStore } from "@anchor/api/project-store";
+import { createAppRouter } from "@anchor/api/routers/index";
 import { env } from "@anchor/env/server";
 import { trpcServer } from "@hono/trpc-server";
 import { Hono } from "hono";
@@ -8,6 +8,9 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 
 const app = new Hono();
+const appRouter = createAppRouter({
+  projectStore: createDatabaseProjectStore(),
+});
 
 app.use(logger());
 app.use(
@@ -19,8 +22,6 @@ app.use(
     credentials: true,
   }),
 );
-
-app.on(["POST", "GET"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 app.use(
   "/trpc/*",
