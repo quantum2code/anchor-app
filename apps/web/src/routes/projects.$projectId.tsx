@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@anch
 import { Input } from "@anchor/ui/components/input";
 import { Label } from "@anchor/ui/components/label";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Link, createFileRoute, redirect } from "@tanstack/react-router";
+import { Link, Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -224,15 +224,25 @@ function RouteComponent() {
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <Button type="button" disabled={!isReady}>
-                          Open Anchor Tools
-                        </Button>
+                        {isReady ? (
+                          <Link
+                            to="/projects/$projectId/documents/$documentId"
+                            params={{ projectId, documentId: document.id }}
+                            className={buttonVariants({ variant: "default" })}
+                          >
+                            Open Reader
+                          </Link>
+                        ) : (
+                          <Button type="button" disabled>
+                            Open Reader
+                          </Button>
+                        )}
                       </div>
 
                       {!isReady ? (
                         <p className="text-sm text-muted-foreground">
-                          Anchor creation is unavailable until this document reaches the ready
-                          state. Failed uploads stay visible without retry automation in this slice.
+                          Reader access stays locked until this document reaches the ready state.
+                          Failed uploads stay visible without retry automation in this slice.
                         </p>
                       ) : null}
                     </div>
@@ -248,6 +258,7 @@ function RouteComponent() {
           </CardContent>
         </Card>
       </div>
+      <Outlet />
     </div>
   );
 }

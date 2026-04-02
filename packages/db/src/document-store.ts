@@ -15,6 +15,10 @@ type ListByProjectInput = {
   projectId: string;
   ownerId: string;
 };
+type GetDocumentByIdInput = {
+  id: string;
+  ownerId: string;
+};
 type UpdateDocumentStatusInput = {
   id: string;
   ownerId: string;
@@ -44,6 +48,14 @@ export function createDatabaseDocumentStore() {
       }
 
       return createdDocument;
+    },
+    async getById({ id, ownerId }: GetDocumentByIdInput) {
+      const storedDocument = await db.query.document.findFirst({
+        where: (documents, { and, eq: columnEquals }) =>
+          and(columnEquals(documents.id, id), columnEquals(documents.ownerId, ownerId)),
+      });
+
+      return storedDocument ?? null;
     },
     async listByProject({ projectId, ownerId }: ListByProjectInput) {
       const documents = await db.query.document.findMany({

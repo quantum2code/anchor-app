@@ -40,6 +40,19 @@ export async function uploadDocumentToStorage(input: {
   }
 }
 
+export async function downloadDocumentFromStorage(input: { storagePath: string }) {
+  const authClient = getAuthClient();
+  const { data, error } = await authClient.storage
+    .from(DOCUMENTS_BUCKET)
+    .download(input.storagePath);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
+}
+
 export async function extractPdfPageCount(file: File) {
   const buffer = await file.arrayBuffer();
   const pdfText = new TextDecoder("latin1").decode(new Uint8Array(buffer));

@@ -149,4 +149,61 @@ describe("projects router", () => {
       }),
     ).rejects.toThrow("Project not found");
   });
+
+  it("lets owners load a ready document for the reader while blocking unfinished documents and non-owners", async () => {
+    const appRouter = createAppRouter({
+      documentStore: createInMemoryDocumentStore(),
+      projectStore: createInMemoryProjectStore(),
+    });
+
+    const owner = appRouter.createCaller(createSignedInContext("user-1"));
+    const otherUser = appRouter.createCaller(createSignedInContext("user-2"));
+
+    const project = await owner.projects.create({ name: "Reader workspace" });
+    const uploadingDocument = await owner.documents.create({
+      projectId: project.id,
+      name: "draft.pdf",
+      storagePath: "user-1/projects/reader-workspace/draft.pdf",
+    });
+    const readyDocument = await owner.documents.create({
+      projectId: project.id,
+      name: "ready.pdf",
+      storagePath: "user-1/projects/reader-workspace/ready.pdf",
+      pageCount: 18,
+    });
+
+    await owner.documents.updateStatus({
+      id: readyDocument.id,
+      projectId: project.id,
+      status: "ready",
+      pageCount: 18,
+    });
+
+    const readerDocument = await owner.documents.readerById({
+      projectId: project.id,
+      documentId: readyDocument.id,
+    });
+
+    expect(readerDocument).toMatchObject({
+      id: readyDocument.id,
+      projectId: project.id,
+      name: "ready.pdf",
+      status: "ready",
+      pageCount: 18,
+    });
+
+    await expect(
+      owner.documents.readerById({
+        projectId: project.id,
+        documentId: uploadingDocument.id,
+      }),
+    ).rejects.toThrow("Document is not ready");
+
+    await expect(
+      otherUser.documents.readerById({
+        projectId: project.id,
+        documentId: readyDocument.id,
+      }),
+    ).rejects.toThrow("Project not found");
+  });
 });

@@ -30,6 +30,7 @@ export type UpdateDocumentStatusInput = {
 
 export interface DocumentStore {
   create(input: CreateDocumentInput): Promise<Document>;
+  getById(input: { id: string; ownerId: string }): Promise<Document | null>;
   listByProject(input: { projectId: string; ownerId: string }): Promise<Document[]>;
   updateStatus(input: UpdateDocumentStatusInput): Promise<Document | null>;
 }
@@ -54,6 +55,15 @@ export function createInMemoryDocumentStore(): DocumentStore {
       };
 
       documents.set(document.id, document);
+
+      return document;
+    },
+    async getById({ id, ownerId }) {
+      const document = documents.get(id);
+
+      if (!document || document.ownerId !== ownerId) {
+        return null;
+      }
 
       return document;
     },

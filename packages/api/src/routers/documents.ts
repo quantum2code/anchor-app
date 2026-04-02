@@ -54,6 +54,37 @@ export function createDocumentsRouter(projectStore: ProjectStore, documentStore:
           ownerId: ctx.session.user.id,
         });
       }),
+    readerById: protectedProcedure
+      .input(
+        z.object({
+          projectId: z.string().min(1),
+          documentId: z.string().min(1),
+        }),
+      )
+      .query(async ({ ctx, input }) => {
+        await assertOwnedProject(input.projectId, ctx.session.user.id);
+
+        const document = await documentStore.getById({
+          id: input.documentId,
+          ownerId: ctx.session.user.id,
+        });
+
+        if (!document || document.projectId !== input.projectId) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Document not found",
+          });
+        }
+
+        if (document.status !== "ready") {
+          throw new TRPCError({
+            code: "PRECONDITION_FAILED",
+            message: "Document is not ready",
+          });
+        }
+
+        return document;
+      }),
     updateStatus: protectedProcedure
       .input(
         z.object({
