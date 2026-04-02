@@ -1,0 +1,27 @@
+{
+  "name": "@anchor/api",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {},
+  "dependencies": {
+    "@anchor/auth": "workspace:*",
+    "@anchor/db": "workspace:*",
+    "@anchor/env": "workspace:*",
+    "@trpc/client": "catalog:",
+    "@trpc/server": "catalog:",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@anchor/config": "workspace:*",
+    "hono": "catalog:",
+    "typescript": "^5"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "anchor",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r build",
+    "check-types": "pnpm -r check-types",
+    "dev:web": "pnpm --filter web dev",
+    "dev:server": "pnpm --filter server dev",
+    "db:push": "pnpm --filter @anchor/db db:push",
+    "db:studio": "pnpm --filter @anchor/db db:studio",
+    "db:generate": "pnpm --filter @anchor/db db:generate",
+    "db:migrate": "pnpm --filter @anchor/db db:migrate"
+  },
+  "dependencies": {
+    "@anchor/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@anchor/config": "workspace:*",
+    "@types/node": "catalog:",
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@10.23.0"
+}
