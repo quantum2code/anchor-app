@@ -1,10 +1,11 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import type { DocumentStore } from "../document-store";
 import type { ProjectStore } from "../project-store";
 import { protectedProcedure, router } from "../index";
 
-export function createProjectsRouter(projectStore: ProjectStore) {
+export function createProjectsRouter(projectStore: ProjectStore, documentStore: DocumentStore) {
   return router({
     create: protectedProcedure
       .input(
@@ -40,7 +41,13 @@ export function createProjectsRouter(projectStore: ProjectStore) {
           });
         }
 
-        return project;
+        return {
+          ...project,
+          documents: await documentStore.listByProject({
+            projectId: project.id,
+            ownerId: ctx.session.user.id,
+          }),
+        };
       }),
   });
 }
