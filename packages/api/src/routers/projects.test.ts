@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { createInMemoryAnchorStore } from "../anchor-store";
 import { createInMemoryDocumentStore } from "../document-store";
 import type { Context } from "../context";
 import { createInMemoryProjectStore } from "../project-store";
@@ -21,6 +22,7 @@ function createSignedInContext(userId: string): Context {
 describe("projects router", () => {
   it("lets signed-in users create projects, list only their own projects, and blocks non-owners", async () => {
     const appRouter = createAppRouter({
+      anchorStore: createInMemoryAnchorStore(),
       documentStore: createInMemoryDocumentStore(),
       projectStore: createInMemoryProjectStore(),
     });
@@ -50,6 +52,7 @@ describe("projects router", () => {
 
   it("lets project owners create and list PDF documents with lifecycle state", async () => {
     const appRouter = createAppRouter({
+      anchorStore: createInMemoryAnchorStore(),
       documentStore: createInMemoryDocumentStore(),
       projectStore: createInMemoryProjectStore(),
     });
@@ -92,6 +95,7 @@ describe("projects router", () => {
 
   it("lets owners move documents through processing, ready, and failed states while keeping failed documents visible", async () => {
     const appRouter = createAppRouter({
+      anchorStore: createInMemoryAnchorStore(),
       documentStore: createInMemoryDocumentStore(),
       projectStore: createInMemoryProjectStore(),
     });
@@ -152,6 +156,7 @@ describe("projects router", () => {
 
   it("lets owners load a ready document for the reader while blocking unfinished documents and non-owners", async () => {
     const appRouter = createAppRouter({
+      anchorStore: createInMemoryAnchorStore(),
       documentStore: createInMemoryDocumentStore(),
       projectStore: createInMemoryProjectStore(),
     });
@@ -205,5 +210,181 @@ describe("projects router", () => {
         documentId: readyDocument.id,
       }),
     ).rejects.toThrow("Project not found");
+  });
+
+  it("loads only anchor summaries that overlap the requested page range and defers full detail to byId", async () => {
+    const appRouter = createAppRouter({
+      anchorStore: createInMemoryAnchorStore(),
+      documentStore: createInMemoryDocumentStore(),
+      projectStore: createInMemoryProjectStore(),
+    });
+
+    const owner = appRouter.createCaller(createSignedInContext("user-1"));
+    const otherUser = appRouter.createCaller(createSignedInContext("user-2"));
+
+    const project = await owner.projects.create({ name: "Anchors" });
+    const document = await owner.documents.create({
+      projectId: project.id,
+      name: "annotated.pdf",
+      storagePath: "user-1/projects/anchors/annotated.pdf",
+      pageCount: 30,
+    });
+
+    await owner.documents.updateStatus({
+      id: document.id,
+      projectId: project.id,
+      status: "ready",
+      pageCount: 30,
+    });
+
+    const anchorOnPageTwo = await owner.anchors.create({
+      projectId: project.id,
+      documentId: document.id,
+      quote: "On page two",
+      summary: "Summary on page two",
+      content: "Detailed note on page two",
+      pageStart: 2,
+      pageEnd: 2,
+    });
+    await owner.anchors.create({
+      projectId: project.id,
+      documentId: document.id,
+      quote: "Cross-page quote",
+      summary: "Summary across pages four and five",
+      content: "Detailed note across pages four and five",
+      pageStart: 4,
+      pageEnd: 5,
+    });
+    await owner.anchors.create({
+      projectId: project.id,
+      documentId: document.id,
+      quote: "Late-page quote",
+      summary: "Summary on page eight",
+      content: "Detailed note on page eight",
+      pageStart: 8,
+      pageEnd: 8,
+    });
+
+    const visibleAnchors = await owner.anchors.listByPageRange({
+      projectId: project.id,
+      documentId: document.id,
+      startPage: 3,
+      endPage: 5,
+    });
+
+    expect(visibleAnchors).toHaveLength(1);
+    expect(visibleAnchors[0]).toMatchObject({
+      summary: "Summary across pages four and five",
+      pageStart: 4,
+      pageEnd: 5,
+    });
+    expect(visibleAnchors[0]).not.toHaveProperty("content");
+
+    const anchorDetail = await owner.anchors.byId({
+      projectId: project.id,
+      documentId: document.id,
+      anchorId: anchorOnPageTwo.id,
+    });
+
+    expect(anchorDetail).toMatchObject({
+      id: anchorOnPageTwo.id,
+      quote: "On page two",
+      summary: "Summary on page two",
+      content: "Detailed note on page two",
+      pageStart: 2,
+      pageEnd: 2,
+    });
+
+    await expect(
+      otherUser.anchors.listByPageRange({
+        projectId: project.id,
+        documentId: document.id,
+        startPage: 1,
+        endPage: 5,
+      }),
+    ).rejects.toThrow("Project not found");
+  });
+
+  it("lets owners update and delete anchors while validating page ranges", async () => {
+    const appRouter = createAppRouter({
+      anchorStore: createInMemoryAnchorStore(),
+      documentStore: createInMemoryDocumentStore(),
+      projectStore: createInMemoryProjectStore(),
+    });
+
+    const owner = appRouter.createCaller(createSignedInContext("user-1"));
+
+    const project = await owner.projects.create({ name: "Anchor CRUD" });
+    const document = await owner.documents.create({
+      projectId: project.id,
+      name: "crud.pdf",
+      storagePath: "user-1/projects/anchor-crud/crud.pdf",
+      pageCount: 12,
+    });
+
+    await owner.documents.updateStatus({
+      id: document.id,
+      projectId: project.id,
+      status: "ready",
+      pageCount: 12,
+    });
+
+    const createdAnchor = await owner.anchors.create({
+      projectId: project.id,
+      documentId: document.id,
+      quote: "Original quote",
+      summary: "Original summary",
+      content: "Original detail",
+      pageStart: 6,
+      pageEnd: 6,
+    });
+
+    const updatedAnchor = await owner.anchors.update({
+      projectId: project.id,
+      documentId: document.id,
+      anchorId: createdAnchor.id,
+      quote: "Updated quote",
+      summary: "Updated summary",
+      content: "Updated detail",
+      pageStart: 6,
+      pageEnd: 7,
+    });
+
+    expect(updatedAnchor).toMatchObject({
+      id: createdAnchor.id,
+      quote: "Updated quote",
+      summary: "Updated summary",
+      content: "Updated detail",
+      pageStart: 6,
+      pageEnd: 7,
+    });
+
+    await expect(
+      owner.anchors.create({
+        projectId: project.id,
+        documentId: document.id,
+        quote: "Bad range",
+        summary: "Bad range",
+        content: "Bad range",
+        pageStart: 7,
+        pageEnd: 6,
+      }),
+    ).rejects.toThrow("Anchor page range is invalid");
+
+    const deletedAnchor = await owner.anchors.delete({
+      projectId: project.id,
+      documentId: document.id,
+      anchorId: createdAnchor.id,
+    });
+
+    expect(deletedAnchor.id).toBe(createdAnchor.id);
+
+    await expect(
+      owner.anchors.byId({
+        projectId: project.id,
+        documentId: document.id,
+        anchorId: createdAnchor.id,
+      }),
+    ).rejects.toThrow("Anchor not found");
   });
 });

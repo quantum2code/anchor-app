@@ -22,6 +22,20 @@
       "when": 1775154000000,
       "tag": "0002_private_documents_bucket",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775157600000,
+      "tag": "0003_reader_anchors",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775201713193,
+      "tag": "0004_common_human_cannonball",
+      "breakpoints": true
     }
   ]
 }

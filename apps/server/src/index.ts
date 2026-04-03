@@ -1,6 +1,7 @@
 import { createContext } from "@anchor/api/context";
 import { createDatabaseProjectStore } from "@anchor/api/project-store";
 import { createAppRouter } from "@anchor/api/routers/index";
+import { createDatabaseAnchorStore } from "@anchor/db/anchor-store";
 import { createDatabaseDocumentStore } from "@anchor/db/document-store";
 import { env } from "@anchor/env/server";
 import { trpcServer } from "@hono/trpc-server";
@@ -10,6 +11,7 @@ import { logger } from "hono/logger";
 
 const app = new Hono();
 const appRouter = createAppRouter({
+  anchorStore: createDatabaseAnchorStore(),
   documentStore: createDatabaseDocumentStore(),
   projectStore: createDatabaseProjectStore(),
 });
