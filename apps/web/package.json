@@ -30,6 +30,7 @@
     "pdfjs-dist": "5.4.296",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-dropzone": "^15.0.0",
     "react-pdf": "^10.4.1",
     "sonner": "catalog:",
     "zod": "catalog:"

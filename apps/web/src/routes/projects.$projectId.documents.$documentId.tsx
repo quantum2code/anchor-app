@@ -70,11 +70,19 @@ function RouteComponent() {
   const { projectId, documentId } = Route.useParams();
   const [loadedBatchCount, setLoadedBatchCount] = useState(1);
   const [selectedAnchorId, setSelectedAnchorId] = useState<string | null>(null);
-  const [selectionPrompt, setSelectionPrompt] = useState<SelectionPrompt | null>(null);
-  const [selectionRectsViewport, setSelectionRectsViewport] = useState<DOMRect[]>([]);
-  const [selectionRectsContainer, setSelectionRectsContainer] = useState<DOMRect[]>([]);
+  const [selectionPrompt, setSelectionPrompt] =
+    useState<SelectionPrompt | null>(null);
+  const [selectionRectsViewport, setSelectionRectsViewport] = useState<
+    DOMRect[]
+  >([]);
+  const [selectionRectsContainer, setSelectionRectsContainer] = useState<
+    DOMRect[]
+  >([]);
   const [showPrompt, setShowPrompt] = useState(false);
-  const [promptPosition, setPromptPosition] = useState<{ x: number; y: number }>({
+  const [promptPosition, setPromptPosition] = useState<{
+    x: number;
+    y: number;
+  }>({
     x: VIEWPORT_PADDING,
     y: VIEWPORT_PADDING,
   });
@@ -282,7 +290,9 @@ function RouteComponent() {
     const activeReaderRoot = readerRoot;
 
     function clearSelectionUi() {
-      setSelectionPrompt((currentValue) => (currentValue ? null : currentValue));
+      setSelectionPrompt((currentValue) =>
+        currentValue ? null : currentValue,
+      );
       setSelectionRectsViewport((currentValue) =>
         currentValue.length > 0 ? [] : currentValue,
       );
@@ -295,7 +305,12 @@ function RouteComponent() {
       const selection = window.getSelection();
       const quote = selection?.toString().replace(/\s+/g, " ").trim() ?? "";
 
-      if (!selection || selection.isCollapsed || selection.rangeCount === 0 || !quote) {
+      if (
+        !selection ||
+        selection.isCollapsed ||
+        selection.rangeCount === 0 ||
+        !quote
+      ) {
         clearSelectionUi();
         return;
       }
@@ -323,7 +338,9 @@ function RouteComponent() {
       }
 
       const viewportRects = Array.from(range.getClientRects())
-        .map((rect) => new DOMRect(rect.left, rect.top, rect.width, rect.height))
+        .map(
+          (rect) => new DOMRect(rect.left, rect.top, rect.width, rect.height),
+        )
         .filter((rect) => rect.width > 0 && rect.height > 0);
 
       if (!viewportRects.length) {
@@ -360,7 +377,11 @@ function RouteComponent() {
       const target =
         event.target instanceof Node ? event.target : globalThis.document.body;
 
-      if (!target || !activeReaderRoot.contains(target) || !isNodeInsidePdfTextLayer(target)) {
+      if (
+        !target ||
+        !activeReaderRoot.contains(target) ||
+        !isNodeInsidePdfTextLayer(target)
+      ) {
         return;
       }
 
@@ -417,7 +438,9 @@ function RouteComponent() {
     }
 
     const frameId = window.requestAnimationFrame(() => {
-      const highlightTargets = readerRoot.querySelectorAll<HTMLElement>("[data-anchor-highlight]");
+      const highlightTargets = readerRoot.querySelectorAll<HTMLElement>(
+        "[data-anchor-highlight]",
+      );
       for (const element of highlightTargets) {
         delete element.dataset.anchorHighlight;
         element.style.backgroundColor = "";
@@ -436,7 +459,11 @@ function RouteComponent() {
           continue;
         }
 
-        for (let pageNumber = anchor.pageStart; pageNumber <= anchor.pageEnd; pageNumber += 1) {
+        for (
+          let pageNumber = anchor.pageStart;
+          pageNumber <= anchor.pageEnd;
+          pageNumber += 1
+        ) {
           const pageRoot = readerRoot.querySelector<HTMLElement>(
             `[data-anchor-page-number="${pageNumber}"]`,
           );
@@ -461,7 +488,9 @@ function RouteComponent() {
               span.style.backgroundColor = "rgba(245, 158, 11, 0.35)";
               span.style.borderRadius = "0.2rem";
               span.style.boxShadow =
-                selectedAnchorId === anchor.id ? "0 0 0 1px rgba(245, 158, 11, 0.9)" : "none";
+                selectedAnchorId === anchor.id
+                  ? "0 0 0 1px rgba(245, 158, 11, 0.9)"
+                  : "none";
             }
           }
         }
@@ -481,219 +510,60 @@ function RouteComponent() {
   };
 
   return (
-    <div className="mx-auto grid w-full max-w-7xl gap-6 px-4 py-6">
-      <div className="flex flex-wrap gap-3">
-        <Link
-          to="/projects/$projectId"
-          params={{ projectId }}
-          className={buttonVariants({ variant: "outline" })}
-        >
-          Back to Workspace
-        </Link>
-        {documentRecord ? (
-          <a
-            href="#reader-surface"
-            className={buttonVariants({ variant: "ghost" })}
-          >
-            Jump to Reader
-          </a>
+    <div className="mx-auto flex h-full min-h-0 max-w-7xl flex-col gap-6 py-6">
+      <div className="flex min-h-0 flex-col gap-4">
+        {documentQuery.isPending || isPdfPending ? (
+          <ReaderState
+            icon={<LoaderCircleIcon className="size-5 animate-spin" />}
+            title="Loading PDF batch"
+            description="The document is downloading before the first pages render."
+          />
         ) : null}
-      </div>
 
-      <div>
-        <Card className="min-h-[32rem]" id="reader-surface">
-          <CardHeader className="gap-3">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="min-w-32 text-center text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                  {totalBatches
-                    ? `${loadedBatchCount} / ${totalBatches} batches`
-                    : "No pages"}
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={!totalBatches || loadedBatchCount >= totalBatches}
-                  onClick={() => {
-                    startTransition(() => {
-                      setLoadedBatchCount((currentCount) =>
-                        Math.min(currentCount + 1, totalBatches),
-                      );
-                    });
-                  }}
-                >
-                  <ChevronLeftIcon className="-rotate-90" />
-                  {`Load next ${PAGE_BATCH_SIZE}`}
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
+        {pdfBytesQuery.isError ? (
+          <ReaderState
+            icon={<FileTextIcon className="size-5" />}
+            title="Storage download failed"
+            description={pdfBytesQuery.error.message}
+          />
+        ) : null}
 
-          <CardContent className="grid gap-4">
-            <div className="grid gap-2 border border-border bg-muted/30 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                Visible Page Range
-              </p>
-              <p className="text-sm">
-                {batchStart && batchEnd
-                  ? `Pages ${batchStart}-${batchEnd}`
-                  : "Page data pending"}
-              </p>
-            </div>
+        {pdfError ? (
+          <ReaderState
+            icon={<FileTextIcon className="size-5" />}
+            title="PDF rendering failed"
+            description={pdfError}
+          />
+        ) : null}
 
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
-              <div className="grid gap-3 border border-border bg-background p-4">
-                <div className="grid gap-1">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Anchor Summaries
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Only anchors overlapping pages {batchStart || "?"}-{batchEnd || "?"} are
-                    loaded for this view.
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Select text in the reader below to open a save-or-dismiss prompt.
-                  </p>
-                </div>
-
-                {anchorsQuery.isPending ? (
-                  <p className="text-sm text-muted-foreground">
-                    Loading anchor summaries for the visible pages...
-                  </p>
-                ) : null}
-
-                {anchorsQuery.isError ? (
-                  <p className="text-sm text-muted-foreground">
-                    {anchorsQuery.error.message}
-                  </p>
-                ) : null}
-
-                {!anchorsQuery.isPending && !anchorsQuery.isError && !visibleAnchors.length ? (
-                  <p className="text-sm text-muted-foreground">
-                    No anchors overlap the current page range yet.
-                  </p>
-                ) : null}
-
-                {visibleAnchors.length ? (
-                  <div className="grid gap-2">
-                    {visibleAnchors.map((anchor) => (
-                      <button
-                        key={anchor.id}
-                        type="button"
-                        className="grid gap-2 border border-border bg-muted/20 p-3 text-left transition-colors hover:bg-muted/40"
-                        onClick={() => {
-                          setSelectedAnchorId(anchor.id);
-                        }}
-                      >
-                        <div className="flex items-center justify-between gap-3 text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                          <span>
-                            Pages {anchor.pageStart}-{anchor.pageEnd}
-                          </span>
-                          <span>
-                            {selectedAnchorId === anchor.id ? "Open" : "Preview"}
-                          </span>
-                        </div>
-                        <p className="text-sm font-medium">{anchor.summary}</p>
-                        <p className="text-sm text-muted-foreground">{anchor.quote}</p>
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="grid gap-3 border border-border bg-muted/20 p-4">
-                <div className="grid gap-1">
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
-                    Anchor Detail
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Full anchor content is fetched only after you open a summary, and saved
-                    anchors come back after refresh from the page-range query.
-                  </p>
-                </div>
-
-                {!selectedAnchorId ? (
-                  <p className="text-sm text-muted-foreground">
-                    Select an anchor summary to load its full detail.
-                  </p>
-                ) : null}
-
-                {anchorDetailQuery.isPending ? (
-                  <p className="text-sm text-muted-foreground">Loading anchor detail...</p>
-                ) : null}
-
-                {anchorDetailQuery.isError ? (
-                  <p className="text-sm text-muted-foreground">
-                    {anchorDetailQuery.error.message}
-                  </p>
-                ) : null}
-
-                {anchorDetailQuery.data ? (
-                  <div className="grid gap-3 text-sm">
-                    <div className="grid gap-1">
-                      <p className="font-medium">{anchorDetailQuery.data.summary}</p>
-                      <p className="text-muted-foreground">{anchorDetailQuery.data.quote}</p>
-                    </div>
-                    <p>{anchorDetailQuery.data.content}</p>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            {documentQuery.isPending || isPdfPending ? (
-              <ReaderState
-                icon={<LoaderCircleIcon className="size-5 animate-spin" />}
-                title="Loading PDF batch"
-                description="The document is downloading before the first pages render."
+        {pdfFile && !pdfError ? (
+          <div className="relative flex-1 min-h-0 overflow-y-auto">
+            {selectionRectsContainer.map((rect, index) => (
+              <div
+                key={`${rect.x}-${rect.y}-${index}`}
+                className="pointer-events-none absolute z-20 rounded-[5px] border-2 border-amber-500/30 bg-amber-500/20"
+                style={{
+                  left: rect.left,
+                  top: rect.top,
+                  width: rect.width,
+                  height: rect.height,
+                }}
               />
-            ) : null}
-
-            {pdfBytesQuery.isError ? (
-              <ReaderState
-                icon={<FileTextIcon className="size-5" />}
-                title="Storage download failed"
-                description={pdfBytesQuery.error.message}
-              />
-            ) : null}
-
-            {pdfError ? (
-              <ReaderState
-                icon={<FileTextIcon className="size-5" />}
-                title="PDF rendering failed"
-                description={pdfError}
-              />
-            ) : null}
-
-            {pdfFile && !pdfError ? (
-              <div className="relative">
-                {selectionRectsContainer.map((rect, index) => (
-                  <div
-                    key={`${rect.x}-${rect.y}-${index}`}
-                    className="pointer-events-none absolute z-20 rounded-[5px] border-2 border-amber-500/30 bg-amber-500/20"
-                    style={{
-                      left: rect.left,
-                      top: rect.top,
-                      width: rect.width,
-                      height: rect.height,
-                    }}
-                  />
-                ))}
-                <ReaderPdfSurface
-                  pdfFile={pdfFile}
-                  deferredPageNumbers={deferredPageNumbers}
-                  readerPagesRef={readerPagesRef}
-                  loadMoreRef={loadMoreRef}
-                  pdfLoadHandlerRef={pdfLoadHandlerRef}
-                  pdfErrorHandlerRef={pdfErrorHandlerRef}
-                  loadedBatchCount={loadedBatchCount}
-                  totalBatches={totalBatches}
-                  batchEnd={batchEnd}
-                  totalPages={totalPages}
-                />
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
+            ))}
+            <ReaderPdfSurface
+              pdfFile={pdfFile}
+              deferredPageNumbers={deferredPageNumbers}
+              readerPagesRef={readerPagesRef}
+              loadMoreRef={loadMoreRef}
+              pdfLoadHandlerRef={pdfLoadHandlerRef}
+              pdfErrorHandlerRef={pdfErrorHandlerRef}
+              loadedBatchCount={loadedBatchCount}
+              totalBatches={totalBatches}
+              batchEnd={batchEnd}
+              totalPages={totalPages}
+            />
+          </div>
+        ) : null}
       </div>
       {selectionPrompt ? (
         <div
@@ -778,13 +648,14 @@ function ReaderState(input: {
   );
 }
 
-function ReactPdfPage(input: {
-  pageNumber: number;
-}) {
+function ReactPdfPage(input: { pageNumber: number }) {
   const [pageError, setPageError] = useState<string | null>(null);
 
   return (
-    <div className="flex w-fit flex-col" data-anchor-page-number={input.pageNumber}>
+    <div
+      className="flex w-fit flex-col"
+      data-anchor-page-number={input.pageNumber}
+    >
       <div className="flex items-center justify-between text-xs uppercase tracking-[0.2em] text-muted-foreground">
         <span>Page {input.pageNumber}</span>
         <span>{pageError ? "Failed" : "Ready"}</span>

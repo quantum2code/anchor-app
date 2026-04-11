@@ -181,6 +181,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.4(react@19.2.4)
+      react-dropzone:
+        specifier: ^15.0.0
+        version: 15.0.0(react@19.2.4)
       react-pdf:
         specifier: ^10.4.1
         version: 10.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1996,6 +1999,10 @@ packages:
     resolution: {integrity: sha512-6t10qk83GOG8p0vKmaCr8eiilZwO171AvbROMtvvNiwrTly62t+7XkA8RdIIVbpMhCASAsxgAzdRSwh6nw/5Dg==}
     engines: {node: '>=4'}
 
+  attr-accept@2.2.5:
+    resolution: {integrity: sha512-0bDNnY/u6pPwHDMoF0FieU354oBi0a8rD9FcsLwzcGWbc8KS8KPIi7y+s13OlVY+gMWc/9xEMUgNE6Qm8ZllYQ==}
+    engines: {node: '>=4'}
+
   babel-dead-code-elimination@1.0.12:
     resolution: {integrity: sha512-GERT7L2TiYcYDtYk1IpD+ASAYXjKbLTDPhBtYj7X1NuRMDTMtAx9kyBenub1Ev41lo91OHCKdmP+egTDmfQ7Ig==}
 
@@ -2487,6 +2494,10 @@ packages:
   figures@6.1.0:
     resolution: {integrity: sha512-d+l3qxjSesT4V7v2fh+QnmFnUWv9lSpjarhShNTgBOfA0ttejbQUAlHLitbjkoRiDulW0OPoQPYIGhIC8ohejg==}
     engines: {node: '>=18'}
+
+  file-selector@2.1.2:
+    resolution: {integrity: sha512-QgXo+mXTe8ljeqUFaX3QVHc5osSItJ/Km+xpocx0aSqWGMSCf6qYs/VnzZgS864Pjn5iceMRFigeAV7AfTlaig==}
+    engines: {node: '>= 12'}
 
   fill-range@7.1.1:
     resolution: {integrity: sha512-YsGpe3WHLK8ZYi4tWDg2Jy3ebRz2rXowDxnld4bkQB00cc/1Zw9AWnC0i9ztDJitivtQvaI9KaLyKrc+hBW0yg==}
@@ -3172,6 +3183,9 @@ packages:
     resolution: {integrity: sha512-NxNv/kLguCA7p3jE8oL2aEBsrJWgAakBpgmgK6lpPWV+WuOmY6r2/zbAVnP+T8bQlA0nzHXSJSJW0Hq7ylaD2Q==}
     engines: {node: '>= 6'}
 
+  prop-types@15.8.1:
+    resolution: {integrity: sha512-oj87CgZICdulUohogVAR7AjlC0327U4el4L6eAvOqCeudMDVU0NThNaV+b9Df4dXgSP1gXMTnPdhfe/2qDH5cg==}
+
   proxy-addr@2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
@@ -3199,11 +3213,20 @@ packages:
     peerDependencies:
       react: ^19.2.4
 
+  react-dropzone@15.0.0:
+    resolution: {integrity: sha512-lGjYV/EoqEjEWPnmiSvH4v5IoIAwQM2W4Z1C0Q/Pw2xD0eVzKPS359BQTUMum+1fa0kH2nrKjuavmTPOGhpLPg==}
+    engines: {node: '>= 10.13'}
+    peerDependencies:
+      react: '>= 16.8 || 18.0.0'
+
   react-hook-form@7.72.0:
     resolution: {integrity: sha512-V4v6jubaf6JAurEaVnT9aUPKFbNtDgohj5CIgVGyPHvT9wRx5OZHVjz31GsxnPNI278XMu+ruFz+wGOscHaLKw==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
+
+  react-is@16.13.1:
+    resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
 
   react-pdf@10.4.1:
     resolution: {integrity: sha512-kS/35staVCBqS29verTQJQZXw7RfsRCPO3fdJoW1KXylcv7A9dw6DZ3vJXC2w+bIBgLw5FN4pOFvKSQtkQhPfA==}
@@ -5126,6 +5149,8 @@ snapshots:
     dependencies:
       tslib: 2.8.1
 
+  attr-accept@2.2.5: {}
+
   babel-dead-code-elimination@1.0.12:
     dependencies:
       '@babel/core': 7.29.0
@@ -5583,6 +5608,10 @@ snapshots:
   figures@6.1.0:
     dependencies:
       is-unicode-supported: 2.1.0
+
+  file-selector@2.1.2:
+    dependencies:
+      tslib: 2.8.1
 
   fill-range@7.1.1:
     dependencies:
@@ -6143,6 +6172,12 @@ snapshots:
       kleur: 3.0.3
       sisteransi: 1.0.5
 
+  prop-types@15.8.1:
+    dependencies:
+      loose-envify: 1.4.0
+      object-assign: 4.1.1
+      react-is: 16.13.1
+
   proxy-addr@2.0.7:
     dependencies:
       forwarded: 0.2.0
@@ -6170,9 +6205,18 @@ snapshots:
       react: 19.2.4
       scheduler: 0.27.0
 
+  react-dropzone@15.0.0(react@19.2.4):
+    dependencies:
+      attr-accept: 2.2.5
+      file-selector: 2.1.2
+      prop-types: 15.8.1
+      react: 19.2.4
+
   react-hook-form@7.72.0(react@19.2.4):
     dependencies:
       react: 19.2.4
+
+  react-is@16.13.1: {}
 
   react-pdf@10.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
